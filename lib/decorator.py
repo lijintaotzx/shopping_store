@@ -14,3 +14,16 @@ def try_db_sql(func):
         return result
 
     return wapper
+
+
+def is_admin(admin_tag):
+    def check(func):
+        def wrapper(*args, **kwargs):
+            print(admin_tag)
+            if admin_tag:
+                re = func(*args, **kwargs)
+                return re
+            else:
+                print("权限不足")
+        return wrapper
+    return check

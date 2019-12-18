@@ -2,6 +2,7 @@
 import socket
 
 from shopping_store.db_handler.myql_db import MysqlDB
+from shopping_store.lib.decorator import is_admin
 from shopping_store.lib.project import (
     match_pn,
     change_point_func,
@@ -66,6 +67,9 @@ class AdminPrintHandler:
 
 
 class AdminHandler:
+    # TODO 设置类变量有问题，暂时没有解决方案
+    __admin_user_tag = False
+
     def __init__(self):
         self.db = MysqlDB()
         self.aph = AdminPrintHandler()
@@ -90,7 +94,7 @@ class AdminHandler:
 
         # 创建UPD Socket连接
         self.create_udp_socket()
-        self.__admin_user_tag = False
+        # self.__admin_user_tag = False
 
     def create_udp_socket(self):
         """
@@ -101,8 +105,8 @@ class AdminHandler:
         self.skfd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.skfd.bind(ADMIN_SOCKET_SERVER_ADDR)
 
-    def check_admin_pn(self, pn):
-        if not self.db.user_register_cheker(pn, 1):
+    def check_pn(self, pn, role):
+        if not self.db.user_register_cheker(pn, role):
             self.aph.exist_pn()
             self.start()
 
@@ -116,7 +120,7 @@ class AdminHandler:
         :return:
         """
         pn = input("请输入手机号：")
-        self.check_admin_pn(pn)
+        self.check_pn(pn, 1)
         name = input("请输入姓名：")
         # password = getpass.getpass("请输入密码：")
         password1 = input("请输入密码：")
@@ -141,8 +145,8 @@ class AdminHandler:
 
         if status:
             # 登录成功
+            __admin_user_tag = True
             self.admin_menu_handler()
-            self.__admin_user_tag = True
         else:
             # 登录失败
             self.start()
@@ -162,8 +166,19 @@ class AdminHandler:
     def check_profit(self):
         pass
 
+    # @is_admin(__admin_user_tag)
     def add_cashier(self):
-        pass
+        """
+        添加结算员
+        :return:
+        """
+        pn = input("请输入结算员手机号：")
+        self.check_pn(pn, 2)
+        name = input("请输入结算员姓名：")
+        # password = getpass.getpass("请输入密码：")
+        password = input("请输入结算员密码：")
+        status, msg = self.db.user_register(name, password, pn, role=2)
+        print(msg)
 
     def lacked_product_list(self):
         pass

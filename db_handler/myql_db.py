@@ -67,9 +67,6 @@ class MysqlDB:
         :param role: 用户角色（0：普通用户（顾客），1：商店管理员，2：收银员）默认为普通用户
         :return: 注册结果
         """
-        if not self.user_register_cheker(pn, role):
-            return False, "对不起，您的手机号已经被注册！请勿重复注册！"
-
         sql = "INSERT INTO user (name, password, pn, role) VALUES ('{}', '{}', '{}', {});".format(
             name,
             self.password_encryption(password),
