@@ -16,6 +16,9 @@ def get_number_input(msg, is_float=False):
     err_msg = "您的输入有误！请重新输入！"
     while True:
         user_input = input(msg)
+        if user_input == "q":
+            return user_input
+
         if is_float:
             try:
                 return float(user_input)

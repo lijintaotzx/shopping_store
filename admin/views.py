@@ -65,6 +65,18 @@ class AdminPrintHandler:
         对不起，两次输入密码不一致！
         """)
 
+    def product_detail_for_admin(self, product_detail):
+        """
+        管理员的商品详情
+        :return:
+        """
+        name, description, source_price, price, product_id, count = product_detail
+        result = "商品名：{}，备注：{}，进价：{}，售价：{}，商品id：{}，库存：{} ".format(
+            name, description, source_price, price, product_id, count
+        )
+        print(result)
+        return result
+
 
 class AdminHandler:
     # TODO 设置类变量有问题，暂时没有解决方案
@@ -151,9 +163,6 @@ class AdminHandler:
             # 登录失败
             self.start()
 
-    def get_product_list(self):
-        pass
-
     def check_product_desc(self, desc):
         """
         获取新添商品描述
@@ -217,14 +226,34 @@ class AdminHandler:
         """
         name = self.get_name()
         source_price, price = self.get_price()
-        # count = int(input("请输入数量："))
         count = get_number_input("请输入数量：")
         description = self.check_product_desc(input("请输入新添商品描述："))
         product_id = self.product_id_str(name)
         print(self.db.add_db_product((name, description, source_price, price, count, product_id)))
 
+    def get_product_list(self):
+        """
+        获取商品列表（管理员）
+        :return:
+        """
+        data = self.db.get_product_list_db(is_admin=True)
+        for product in data:
+            self.aph.product_detail_for_admin(product)
+
     def change_product_count(self):
-        pass
+        """
+        修改库存
+        :return:
+        """
+        while True:
+            product_id = get_number_input("请输入更改库存的商品的ID(输入q退出)：")
+            if product_id == "q":
+                break
+            if self.db.judge_product_id(product_id):
+                change_count = get_number_input("调整商品库存为：")
+                self.db.change_product_count_db(product_id, change_count)
+            else:
+                continue
 
     def get_order_list(self):
         pass

@@ -137,3 +137,38 @@ class MysqlDB:
         except:
             self.db.rollback()
             return "新商品添加失败！"
+
+    def get_product_list_db(self, is_admin=False):
+        if is_admin:
+            sql = "SELECT name,description,source_price,price,product_id,count FROM product"
+        else:
+            sql = "SELECT name,description,price,product_id,count FROM product"
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def change_product_count_db(self, product_id, change_count):
+        sql1 = "UPDATE product set count = %s WHERE product_id = %s" % (change_count, product_id)
+        self.cursor.execute(sql1)
+        self.db.commit()
+        sql2 = "SELECT count FROM product WHERE product_id =%s" % product_id
+        self.cursor.execute(sql2)
+        product = self.cursor.fetchone()
+
+        print("修改成功！当前库存:{}".format(product[0]))
+
+    def judge_product_id(self, product_id):
+        """
+        判断product_id是否存在
+        :param product_id:
+        :return: Ｔrue or Ｆalse
+        """
+        sql = "SELECT name,count FROM product WHERE product_id = %s" % product_id
+        self.cursor.execute(sql)
+        fetch_result = self.cursor.fetchone()
+        if fetch_result:
+            name, count = fetch_result
+            print("您修改的商品名称:{},当前库存:{}".format(name, count))
+            return True
+        else:
+            print("商品ID不存在！")
+            return False
