@@ -1,12 +1,12 @@
 # coding=utf-8
 import socket
 
-from shopping_store.db_handler.myql_db import MysqlDB
+from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.decorator import is_admin
 from shopping_store.lib.project import (
     match_pn,
     change_point_func,
-)
+    get_number_input)
 from shopping_store.settings import ADMIN_SOCKET_SERVER_ADDR
 
 
@@ -154,8 +154,74 @@ class AdminHandler:
     def get_product_list(self):
         pass
 
+    def check_product_desc(self, desc):
+        """
+        获取新添商品描述
+        :return:
+        """
+        if not desc:
+            desc = "暂无商品描述"
+        return desc
+
+    def product_id_str(self, name):
+        """
+        获取商品ID
+        :param name: 商品名称
+        :return: 商品ID:数字
+        """
+        num = 0
+        for i in str(name):
+            num += ord(i)
+        return num
+
+    def price_compare(self, source_price, price):
+        """
+        比较商品进价，售价大小
+        :param source_price: 商品进价
+        :param price: 商品售价
+        :return: True 或者 False
+        """
+        return source_price < price
+
+    def get_name(self):
+        """
+        判断新添商品名称是否重复
+        :return: 新添商品名称
+        """
+        while True:
+            name = input("请输入新添商品名称:")
+            if not self.db.check_product_name(name):
+                print("商品名称重复")
+                continue
+            else:
+                return name
+
+    def get_price(self):
+        """
+        录入新添商品进价，售价
+        :return: 商品进价，售价
+        """
+        while True:
+            source_price = get_number_input("请输入新添商品进价:", is_float=True)
+            price = get_number_input("请输入新添商品售价:", is_float=True)
+            if not self.price_compare(source_price, price):
+                print("售价有误")
+                continue
+            else:
+                return source_price, price
+
     def add_product(self):
-        pass
+        """
+        添加新商品
+        :return:商品信息（名称，描述，进价，售价，数量，ID）
+        """
+        name = self.get_name()
+        source_price, price = self.get_price()
+        # count = int(input("请输入数量："))
+        count = get_number_input("请输入数量：")
+        description = self.check_product_desc(input("请输入新添商品描述："))
+        product_id = self.product_id_str(name)
+        print(self.db.add_db_product((name, description, source_price, price, count, product_id)))
 
     def change_product_count(self):
         pass

@@ -1,6 +1,36 @@
 # coding=utf-8
 import re
 
+from shopping_store.lib.logger import Log
+
+logger = Log("shopping_store_error")
+
+
+def get_number_input(msg, is_float=False):
+    """
+    封装input函数，判断类型是否正确
+    :param msg:
+    :param is_float:
+    :return:
+    """
+    err_msg = "您的输入有误！请重新输入！"
+    while True:
+        user_input = input(msg)
+        if is_float:
+            try:
+                return float(user_input)
+            except Exception as err:
+                logger.info("用户输入错误，msg:{}".format(err))
+                print(err_msg)
+                continue
+        else:
+            try:
+                return int(user_input)
+            except Exception as err:
+                logger.info("用户输入错误，msg:{}".format(err))
+                print(err_msg)
+                continue
+
 
 def match_pn(pn):
     """

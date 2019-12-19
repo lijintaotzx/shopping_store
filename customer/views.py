@@ -1,7 +1,7 @@
 # coding=utf-8
 import socket
 
-from shopping_store.db_handler.myql_db import MysqlDB
+from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
 
 

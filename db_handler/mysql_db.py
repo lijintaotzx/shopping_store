@@ -3,7 +3,6 @@ import hashlib
 
 import pymysql
 
-from shopping_store.lib.decorator import try_db_sql
 from shopping_store.settings import (
     MYSQL_HOST,
     MYSQL_PORT,
@@ -107,3 +106,34 @@ class MysqlDB:
             return "商品ID：{}已下架!".format(product_id)
         else:
             return "商品ID：{}下架失败!".format(product_id)
+
+    def check_product_name(self, product_name):
+        """
+        查询新添加的product_name是否重复
+        :param product_name: 新添加的商品名称
+        :return: True or False
+        """
+        sql = "select count(*) from `product` where name = '{}';".format(product_name)
+        self.cursor.execute(sql)
+        num = self.cursor.fetchall()
+        if num[0][0] == 0:
+            return True
+        else:
+            return False
+
+    def add_db_product(self, add_product):
+        """
+        # TODO
+        :param add_product:
+        :return:
+        """
+        try:
+            sql = "INSERT INTO `product` " \
+                  "(`name`, `description`, `source_price`, `price`, `count`,`product_id`) " \
+                  "VALUES {};".format(add_product)
+            self.cursor.execute(sql)
+            self.db.commit()
+            return "新商品添加成功！"
+        except:
+            self.db.rollback()
+            return "新商品添加失败！"
