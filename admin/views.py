@@ -290,13 +290,15 @@ class AdminHandler:
         登录成功后主菜单
         :return:
         """
-        self.aph.admin_menu()
-        user_input = input(">>")
-        point_func = self.admin_menu_map.get(user_input)
-        if not point_func:
-            self.aph.error_input()
-        else:
-            eval(change_point_func(point_func))
+        while True:
+            # TODO 注销退出
+            self.aph.admin_menu()
+            user_input = input(">>")
+            point_func = self.admin_menu_map.get(user_input)
+            if not point_func:
+                self.aph.error_input()
+            else:
+                eval(change_point_func(point_func))
 
     def wating_for_socket_msg(self):
         """

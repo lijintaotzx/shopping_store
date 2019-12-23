@@ -8,6 +8,7 @@ class Log:
     """
     项目Log
     """
+
     def __init__(self, log_type):
         self.log_type = log_type
         self.log_path = LOG_PATH.get(self.log_type, False)
