@@ -172,3 +172,28 @@ class MysqlDB:
         else:
             print("商品ID不存在！")
             return False
+
+    def get_order_list_db(self, order_begin, order_end):
+        """
+        获取订单列表(刘梓威)
+        sql语句
+        :param order_begin: 开始时间
+        :param order_end: 结束时间
+        :return: 订单记录的信息(元组的形式)
+        """
+        sql = "SELECT user_id, profit, order_id, cashier_id, amount, create_time FROM order_record WHERE create_time BETWEEN '{}' AND '{}';".format(
+            order_begin,
+            order_end
+        )
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def get_user_msg_from_id(self, user_id):
+        """
+        获取用户基本信息
+        :param user_id:用户ID
+        :return: 用户信息元组
+        """
+        sql = "SELECT id, pn, name FROM user WHERE id={}".format(user_id)
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()

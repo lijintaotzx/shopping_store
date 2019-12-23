@@ -1,8 +1,9 @@
 # coding=utf-8
+import re
 import socket
+from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
-from shopping_store.lib.decorator import is_admin
 from shopping_store.lib.project import (
     match_pn,
     change_point_func,
@@ -76,6 +77,25 @@ class AdminPrintHandler:
         )
         print(result)
         return result
+
+    def get_order_list(self, order):
+        """
+        打印订单列表
+        :param order:
+        :return:
+        """
+        user_msg, profit, order_id, cashier_msg, amount, create_time = order
+        result = "订单ID：{}，订单金额：{}，订单收益：{}，用户：{}（ID：{}），结算员：{}（ID：{}），订单创建时间：{} ".format(
+            order_id,
+            amount,
+            profit,
+            user_msg[1],
+            user_msg[0],
+            cashier_msg[1],
+            cashier_msg[0],
+            create_time,
+        )
+        print(result)
 
 
 class AdminHandler:
@@ -255,12 +275,6 @@ class AdminHandler:
             else:
                 continue
 
-    def get_order_list(self):
-        pass
-
-    def check_profit(self):
-        pass
-
     # @is_admin(__admin_user_tag)
     def add_cashier(self):
         """
@@ -284,6 +298,59 @@ class AdminHandler:
     def remove_product(self):
         product_id = input("请输入下架商品的ID：")
         print(self.db.remove_db_product(product_id))
+
+    def format_datetime(self, input_date):
+        formater = r"^[1-9]\d{0,3}-(1[0-2]|0?[1-9])-(3[01]|[12]\d|0?[1-9])$"
+        return re.match(formater, input_date)
+
+    def affirm_time(self):
+        """
+        匹配返回用户输入的时间段
+        :return:
+        """
+        while True:
+            order_begin = input("请输入要查询订单的开始时间:")
+            order_end = input("请输入要查询订单的结束时间:")
+            if self.format_datetime(order_begin) and self.format_datetime(order_end):
+                return order_begin, order_end
+            else:
+                print("输入有误 !格式:'2019-10-10'!")
+                continue
+
+    def get_order_list(self):
+        """
+        获取订单列表
+        :return:
+        """
+        order_begin, order_end = self.affirm_time()
+        data = self.db.get_order_list_db(order_begin, order_end)
+
+        for order in data:
+            user_id, profit, order_id, cashier_id, amount, create_time = order
+            # 补充订单中用户和结算员的详细信息
+            order_info = (
+                self.db.get_user_msg_from_id(user_id),  # 根据ID补充用户信息
+                profit,
+                order_id,
+                self.db.get_user_msg_from_id(cashier_id),  # 根据ID补充结算员ID
+                amount,
+                create_time,
+            )
+
+            self.aph.get_order_list(order_info)
+
+    def check_profit(self):
+        """
+        计算收益(刘梓威)
+        """
+        order_begin, order_end = self.affirm_time()
+        data = self.db.get_order_list_db(order_begin, order_end)
+        profit = Decimal(0.00)
+        for product in data:
+            profit += product[1]
+
+        result = "%s到%s的收益为%s元" % (order_begin, order_end, profit)
+        print(result)
 
     def admin_menu_handler(self):
         """
