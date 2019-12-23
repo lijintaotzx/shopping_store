@@ -197,3 +197,15 @@ class MysqlDB:
         sql = "SELECT id, pn, name FROM user WHERE id={}".format(user_id)
         self.cursor.execute(sql)
         return self.cursor.fetchone()
+
+    def get_order_details_db(self, order_id):
+        """
+        获取订单详情
+        :param order_id: 订单ID
+        :return:
+        """
+        sql = "SELECT product.product_id, product.name, product.description, order_record_detail.count, order_record_detail.price " \
+              "FROM order_record_detail, product " \
+              "WHERE order_record_detail.product_id=product.id AND order_record_detail.order_id={};".format(order_id)
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()

@@ -40,9 +40,11 @@ class AdminPrintHandler:
         2、添加新商品
         3、调整商品库存
         4、查看订单列表
-        5、商品下架
-        6、计算收益
-        7、添加收银员
+        5、查看订单详情
+        6、商品下架
+        7、计算收益
+        8、添加收银员
+        9、缺货库存列表
         ************************
         """)
 
@@ -97,6 +99,12 @@ class AdminPrintHandler:
         )
         print(result)
 
+    def get_order_detail(self, order_detail):
+        result = "商品ID：{}，商品名称：{}，商品描述：{}，购买数量：{}，购买价格：{}".format(
+            *order_detail
+        )
+        print(result)
+
 
 class AdminHandler:
     # TODO 设置类变量有问题，暂时没有解决方案
@@ -117,11 +125,11 @@ class AdminHandler:
             "2": "add_product",  # 添加新商品
             "3": "change_product_count",  # 调整商品库存
             "4": "get_order_list",  # 查看订单列表
-            "5": "remove_product",  # 商品下架
-            "6": "check_profit",  # 计算收益
-            "7": "add_cashier",  # 添加结算员
-            "8": "lacked_product_list",  # 缺货库存列表
-            "9": "get_order_detail",  # 查看订单详情
+            "5": "get_order_detail",  # 查看订单详情
+            "6": "remove_product",  # 商品下架
+            "7": "check_profit",  # 计算收益
+            "8": "add_cashier",  # 添加结算员
+            "9": "lacked_product_list",  # 缺货库存列表
         }
 
         # 创建UPD Socket连接
@@ -292,9 +300,6 @@ class AdminHandler:
     def lacked_product_list(self):
         pass
 
-    def get_order_detail(self):
-        pass
-
     def remove_product(self):
         product_id = input("请输入下架商品的ID：")
         print(self.db.remove_db_product(product_id))
@@ -351,6 +356,16 @@ class AdminHandler:
 
         result = "%s到%s的收益为%s元" % (order_begin, order_end, profit)
         print(result)
+
+    def get_order_detail(self):
+        """
+        获取订单详情
+        :return:
+        """
+        order_id = get_number_input("请输入订单ID：")
+        data = self.db.get_order_details_db(order_id)
+        for order_detail in data:
+            self.aph.get_order_detail(order_detail)
 
     def admin_menu_handler(self):
         """
