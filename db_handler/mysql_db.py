@@ -209,3 +209,12 @@ class MysqlDB:
               "WHERE order_record_detail.product_id=product.id AND order_record_detail.order_id={};".format(order_id)
         self.cursor.execute(sql)
         return self.cursor.fetchall()
+
+    def lacked_product(self):
+        """
+        获取缺货库存
+        :return:
+        """
+        sql = "SELECT product_id,name,description, source_price, price, count FROM shopping_store.product WHERE count=0 AND is_del=0"
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()

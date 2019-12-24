@@ -17,3 +17,6 @@ LOG_PATH = {
     "mysql_error": "/Users/tzx/test/tn/mysql_error.log",
     "shopping_store_error": "/Users/tzx/test/tn/shopping_store_error.log"
 }
+
+# 缺货库存输出文件路径
+LACKED_PRODUCT_PATH = "/Users/tzx/test/shopping_store"

@@ -1,4 +1,5 @@
 # coding=utf-8
+import datetime
 import re
 import socket
 from _decimal import Decimal
@@ -7,8 +8,12 @@ from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.project import (
     match_pn,
     change_point_func,
-    get_number_input)
-from shopping_store.settings import ADMIN_SOCKET_SERVER_ADDR
+    get_number_input,
+)
+from shopping_store.settings import (
+    ADMIN_SOCKET_SERVER_ADDR,
+    LACKED_PRODUCT_PATH,
+)
 
 
 class AdminPrintHandler:
@@ -104,6 +109,18 @@ class AdminPrintHandler:
             *order_detail
         )
         print(result)
+
+    def format_product(self, info):
+        product_id, name, description, source_price, price, count = info
+        result = "商品名:{},描述:{},进价:{},售价:{},商品id:{},库存:{}".format(
+            name,
+            description,
+            source_price,
+            price,
+            product_id,
+            count,
+        )
+        return result
 
 
 class AdminHandler:
@@ -297,9 +314,6 @@ class AdminHandler:
         status, msg = self.db.user_register(name, password, pn, role=2)
         print(msg)
 
-    def lacked_product_list(self):
-        pass
-
     def remove_product(self):
         product_id = input("请输入下架商品的ID：")
         print(self.db.remove_db_product(product_id))
@@ -366,6 +380,33 @@ class AdminHandler:
         data = self.db.get_order_details_db(order_id)
         for order_detail in data:
             self.aph.get_order_detail(order_detail)
+
+    def get_lacked_product_file_path(self):
+        """
+        获取缺货库存文件路径及文件
+        :return:
+        """
+        t = datetime.datetime.now()
+        str_t = t.strftime("%Y-%m-%d_%H:%M:%S")
+        return LACKED_PRODUCT_PATH + str_t + ".txt"
+
+    def lacked_product_list(self):
+        """
+        获取缺货库存列表，并输出txt文件
+        :return:
+        """
+        data = self.db.lacked_product()
+        for info in data:
+            print(self.aph.format_product(info))
+        educe = input("请问是否需要导出文件:")
+        if educe == "是":
+            file_path = self.get_lacked_product_file_path()
+            f = open(file_path, 'w+')
+            for info in data:
+                f.write(self.aph.format_product(info) + '\n')
+            f.flush()
+            f.close()
+            print("缺货库存单已保存至:{}".format(file_path))
 
     def admin_menu_handler(self):
         """
