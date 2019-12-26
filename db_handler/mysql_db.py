@@ -147,7 +147,7 @@ class MysqlDB:
         if is_admin:
             sql = "SELECT name,description,source_price,price,product_id,count FROM product"
         else:
-            sql = "SELECT name,description,price,product_id,count FROM product WHERE is_del > 0 and"
+            sql = "SELECT name,description,price,product_id,count FROM product WHERE is_del=0 and count>0"
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
