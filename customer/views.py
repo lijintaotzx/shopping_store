@@ -7,6 +7,9 @@ from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
 
 
 class CustomerPrintHandler:
+    """
+    界面菜单打印
+    """
     def __init__(self):
         pass
 
@@ -30,6 +33,9 @@ class CustomerPrintHandler:
 
 
 class Product:
+    """
+    商品
+    """
     def __init__(self, product_id, name, price, count):
         self.product_id = product_id
         self.name = name
@@ -38,6 +44,9 @@ class Product:
 
 
 class ShoppingCart:
+    """
+    购物车
+    """
     def __init__(self, user_id):
         self.__user_id = user_id
         self.product_list = []
@@ -130,9 +139,59 @@ class CustomerHandler:
         )
 
     def remove_product(self):
+        """
+        从购物车中移除商品
+        :return:
+        """
         pass
 
     def paying(self):
+        """
+        发起结算
+        :return:
+        """
+        pass
+
+    def get_product_list(self):
+        """
+        获取商品信息列表
+        :return:
+        """
+        pass
+
+    def get_my_shopping_carts(self):
+        """
+        获取我的购物车商品列表
+        :return:
+        """
+        pass
+
+    def reduce_product_count(self):
+        """
+        扣除库存
+        :return:
+        """
+        pass
+
+    def product_not_enough(self):
+        """
+        库存不足通知提醒
+        :return:
+        """
+        pass
+
+    def commit_record(self):
+        """
+        保存交易记录
+        :return:
+        """
+        pass
+
+    def export_ticket(self):
+        """
+        打印小票
+        :return:
+        """
         pass
 
     def start(self):
