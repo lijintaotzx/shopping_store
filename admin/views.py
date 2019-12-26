@@ -315,7 +315,7 @@ class AdminHandler:
         print(msg)
 
     def remove_product(self):
-        product_id = input("请输入下架商品的ID：")
+        product_id = get_number_input("请输入下架商品的ID：")
         print(self.db.remove_db_product(product_id))
 
     def format_datetime(self, input_date):
@@ -436,12 +436,12 @@ class AdminHandler:
 
     def start(self):
         """
-        启动函数
+        管理后台启动函数
         :return:
         """
         while True:
             self.aph.main_menu()
-            user_input = input(">>")
+            user_input = get_number_input(">>")
             point_func = self.start_menu_map.get(user_input, False)
             if not point_func:
                 self.aph.error_input()

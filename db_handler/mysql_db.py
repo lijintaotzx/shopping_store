@@ -139,6 +139,11 @@ class MysqlDB:
             return "新商品添加失败！"
 
     def get_product_list_db(self, is_admin=False):
+        """
+        获取商品信息列表
+        :param is_admin: 是否为管理员
+        :return:
+        """
         if is_admin:
             sql = "SELECT name,description,source_price,price,product_id,count FROM product"
         else:
@@ -218,3 +223,15 @@ class MysqlDB:
         sql = "SELECT product_id,name,description, source_price, price, count FROM shopping_store.product WHERE count=0 AND is_del=0"
         self.cursor.execute(sql)
         return self.cursor.fetchall()
+
+    def get_product_msg(self, product_id):
+        """
+        获取商品信息
+        :param product_id: product_id
+        :return:
+        """
+        sql = "SELECT product_id, name, description, source_price, price, count FROM product WHERE product_id={}".format(
+            product_id
+        )
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()
