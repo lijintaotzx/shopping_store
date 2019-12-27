@@ -2,8 +2,11 @@
 import socket
 
 from shopping_store.db_handler.mysql_db import MysqlDB
+from shopping_store.lib.logger import Log
 from shopping_store.lib.project import get_number_input, change_point_func
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
+
+logger = Log("shopping_store_error")
 
 
 class CustomerPrintHandler:
@@ -30,6 +33,11 @@ class CustomerPrintHandler:
     def error_input(self):
         print("""
         您的输入有误！请重新输入！
+        """)
+
+    def connect_to_cashier_error(self):
+        print("""
+        创建与结算端的TCP连接失败!
         """)
 
 
@@ -98,12 +106,16 @@ class CustomerHandler:
             "4": "paying",  # 发起结算
         }
         # 创建TCP Socket连接
-        # self.create_tcp_socket()
+        self.skfd = False
+        self.create_tcp_socket()
 
     def create_tcp_socket(self):
-        self.skfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.skfd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.skfd.connect(CASHIER_SOCKET_SERVER_ADDR)
+        try:
+            self.skfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.skfd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.skfd.connect(CASHIER_SOCKET_SERVER_ADDR)
+        except Exception as error:
+            logger.error("创建与结算端的TCP连接失败,msg:%s" % error)
 
     def register(self):
         pass
@@ -212,6 +224,10 @@ class CustomerHandler:
         :return:
         """
         while True:
+            if not self.skfd:
+                self.aph.connect_to_cashier_error()
+                break
+
             self.aph.main_menu()
             user_input = get_number_input(">>")
             point_func = self.start_menu_map.get(user_input, False)
@@ -219,12 +235,3 @@ class CustomerHandler:
                 self.aph.error_input()
             else:
                 eval(change_point_func(point_func))
-
-
-a = CustomerHandler()
-a.add_product()
-for x in a.shopping_cart.product_list:
-    print(x.__dict__)
-
-a.remove_product()
-print(a.shopping_cart.product_list)
