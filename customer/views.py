@@ -10,6 +10,7 @@ class CustomerPrintHandler:
     """
     界面菜单打印
     """
+
     def __init__(self):
         pass
 
@@ -36,6 +37,7 @@ class Product:
     """
     商品
     """
+
     def __init__(self, product_id, name, price, count):
         self.product_id = product_id
         self.name = name
@@ -47,6 +49,7 @@ class ShoppingCart:
     """
     购物车
     """
+
     def __init__(self, user_id):
         self.__user_id = user_id
         self.product_list = []
@@ -61,12 +64,18 @@ class ShoppingCart:
     def add_product(self, product):
         self.product_list.append(product)
 
-    def remove_product(self, product):
-        if product not in self.product_list:
-            return False, "您的购物车中没有该商品！"
+    def remove_product(self, product_id):
+        """
+        移除商品出购物车
+        :param product_id:
+        :return:
+        """
+        for product in self.product_list:
+            if product.product_id == product_id:
+                self.product_list.remove(product)
+                return True, "移除成功！"
 
-        self.product_list.remove(product)
-        return True, "移除成功！"
+        return False, "您的购物车中没有该商品！"
 
 
 class CustomerHandler:
@@ -143,7 +152,9 @@ class CustomerHandler:
         从购物车中移除商品
         :return:
         """
-        pass
+        product_id = get_number_input("请输入需要移除的商品ID：")
+        status, msg = self.shopping_cart.remove_product(product_id)
+        print(msg)
 
     def paying(self):
         """
@@ -166,9 +177,10 @@ class CustomerHandler:
         """
         pass
 
-    def reduce_product_count(self):
+    def reduce_product_count(self, product_list):
         """
         扣除库存
+        :param product_list: 这里接收用户的一个支付成功的购物车列表，遍历里面的商品ID扣除库存（注意判断库存不能为负，否则打印log）
         :return:
         """
         pass
@@ -207,3 +219,12 @@ class CustomerHandler:
                 self.aph.error_input()
             else:
                 eval(change_point_func(point_func))
+
+
+a = CustomerHandler()
+a.add_product()
+for x in a.shopping_cart.product_list:
+    print(x.__dict__)
+
+a.remove_product()
+print(a.shopping_cart.product_list)
