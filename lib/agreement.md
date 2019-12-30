@@ -7,6 +7,8 @@
 
 ## 结算端
     STATUS_CODE MSG
+    200 请求成功
+    400 失败原因
 
     STATUS_CODE:
     * 200 成功（允许）

@@ -40,6 +40,13 @@ class CustomerPrintHandler:
         创建与结算端的TCP连接失败!
         """)
 
+    def paying_error(self, msg):
+        print(
+            """
+            结算失败: {}
+            """.format(msg)
+        )
+
 
 class Product:
     """
@@ -90,7 +97,7 @@ class CustomerHandler:
     def __init__(self):
         self.db = MysqlDB()
         self.aph = CustomerPrintHandler()
-        self.shopping_cart = ShoppingCart(user_id=1)  # TODO 测试代码
+        self.shopping_cart = ShoppingCart(user_id=self.user_id)  # TODO 测试代码
 
         # 主函数映射方法
         self.start_menu_map = {
@@ -105,9 +112,7 @@ class CustomerHandler:
             "3": "get_my_orders",  # 查看我的购物车
             "4": "paying",  # 发起结算
         }
-        # 创建TCP Socket连接
-        self.skfd = False
-        self.create_tcp_socket()
+        self.user_id = None
 
     def create_tcp_socket(self):
         try:
@@ -115,6 +120,7 @@ class CustomerHandler:
             self.skfd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.skfd.connect(CASHIER_SOCKET_SERVER_ADDR)
         except Exception as error:
+            self.aph.connect_to_cashier_error()
             logger.error("创建与结算端的TCP连接失败,msg:%s" % error)
 
     def register(self):
@@ -168,12 +174,38 @@ class CustomerHandler:
         status, msg = self.shopping_cart.remove_product(product_id)
         print(msg)
 
+    def transform_shopping_cards(self):
+        return {
+            "user_id": self.user_id,
+            "shopping_cards": [
+                product.__dict__ for product in self.shopping_cart.product_list
+            ]
+        }
+
+    def send_shopping_cards(self):
+        request_data = "SHOPPING_CARDS {}".format(self.transform_shopping_cards())
+        self.skfd.send(request_data.encode())
+
     def paying(self):
         """
         发起结算
         :return:
         """
-        pass
+        self.create_tcp_socket()
+        request_data = "REQUEST {}".format(self.user_id)
+        self.skfd.send(request_data.encode())
+        status_code, msg = self.skfd.recv(1024).decode()
+
+        if status_code == "200":
+            self.send_shopping_cards()
+            status_code, msg = self.skfd.recv(1024).decode()
+            if status_code == "200":
+                # TODO 范竹雲
+                pass
+            else:
+                self.aph.paying_error(msg)
+        else:
+            self.aph.paying_error(msg)
 
     def get_product_list(self):
         """
@@ -224,10 +256,6 @@ class CustomerHandler:
         :return:
         """
         while True:
-            if not self.skfd:
-                self.aph.connect_to_cashier_error()
-                break
-
             self.aph.main_menu()
             user_input = get_number_input(">>")
             point_func = self.start_menu_map.get(user_input, False)
