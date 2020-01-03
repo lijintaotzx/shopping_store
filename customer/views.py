@@ -1,9 +1,10 @@
 # coding=utf-8
 import socket
+from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
-from shopping_store.lib.project import get_number_input, change_point_func
+from shopping_store.lib.project import get_number_input, change_point_func, get_request
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
 
 logger = Log("shopping_store_error")
@@ -97,7 +98,6 @@ class CustomerHandler:
     def __init__(self):
         self.db = MysqlDB()
         self.aph = CustomerPrintHandler()
-        self.shopping_cart = ShoppingCart(user_id=self.user_id)  # TODO 测试代码
 
         # 主函数映射方法
         self.start_menu_map = {
@@ -112,7 +112,8 @@ class CustomerHandler:
             "3": "get_my_orders",  # 查看我的购物车
             "4": "paying",  # 发起结算
         }
-        self.user_id = None
+        self.user_id = 1
+        self.shopping_cart = ShoppingCart(user_id=1)  # TODO 测试代码
 
     def create_tcp_socket(self):
         try:
@@ -164,6 +165,7 @@ class CustomerHandler:
                 count=user_input_count,
             )
         )
+        # print(self.transform_shopping_cards())
 
     def remove_product(self):
         """
@@ -192,9 +194,10 @@ class CustomerHandler:
         :return:
         """
         self.create_tcp_socket()
-        request_data = "REQUEST {}".format(self.user_id)
+        request_data = "REQUEST {}".format(self.transform_shopping_cards())
         self.skfd.send(request_data.encode())
-        status_code, msg = self.skfd.recv(1024).decode()
+
+        status_code, msg = get_request(self.skfd.recv(1024).decode())
 
         if status_code == "200":
             self.send_shopping_cards()
@@ -221,35 +224,6 @@ class CustomerHandler:
         """
         pass
 
-    def reduce_product_count(self, product_list):
-        """
-        扣除库存
-        :param product_list: 这里接收用户的一个支付成功的购物车列表，遍历里面的商品ID扣除库存（注意判断库存不能为负，否则打印log）
-        :return:
-        """
-        pass
-
-    def product_not_enough(self):
-        """
-        库存不足通知提醒
-        :return:
-        """
-        pass
-
-    def commit_record(self):
-        """
-        保存交易记录
-        :return:
-        """
-        pass
-
-    def export_ticket(self):
-        """
-        打印小票
-        :return:
-        """
-        pass
-
     def start(self):
         """
         客户端启动函数
@@ -263,3 +237,20 @@ class CustomerHandler:
                 self.aph.error_input()
             else:
                 eval(change_point_func(point_func))
+
+
+# a = CustomerHandler()
+# a.add_product()
+li = {'user_id': 1, 'shopping_cards': [{'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
+                                       {'product_id': 91701, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
+                                       {'product_id': 11111111, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}]}
+
+result = {
+    "success_list": [
+        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
+        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}
+    ],
+    "fail_list": [
+        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}
+    ]
+}

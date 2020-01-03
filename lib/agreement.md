@@ -1,9 +1,9 @@
 # 交易通信协议
 
 ## 用户端
-    * 请求结算 REQUEST {user_id}
-    * 发送购物车信息 SHOPPING_CARDS {class: shopping_cards}
-    * 发送结算金额信息 PAYING {class: shopping_cards} {pay_money}
+    * 请求结算 REQUEST {user_id: user_id,  shopping_cards: shopping_cards}
+    * 发送购物车信息 SHOPPING_CARDS {user_id: user_id,  shopping_cards: shopping_cards}
+    * 发送结算金额信息 PAYING {user_id: user_id,  shopping_cards: shopping_cards} {pay_money}
 
 ## 结算端
     STATUS_CODE MSG
