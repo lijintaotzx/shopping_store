@@ -4,7 +4,7 @@ from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
-from shopping_store.lib.project import get_number_input, change_point_func, get_request
+from shopping_store.lib.project import get_number_input, change_point_func, get_request, match_pn
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
 
 logger = Log("shopping_store_error")
@@ -31,6 +31,22 @@ class CustomerPrintHandler:
         ************************
         """)
 
+    def customer_memu(self):
+        """
+        用户可操作菜单
+        :return:
+        """
+        print("""
+                *******用户操作菜单*******
+
+                1、添加商品到购物车
+                2、从购物车中移除商品
+                3、查看我的购物车
+                4、发起结算
+
+                ************************
+                """)
+
     def error_input(self):
         print("""
         您的输入有误！请重新输入！
@@ -47,6 +63,21 @@ class CustomerPrintHandler:
             结算失败: {}
             """.format(msg)
         )
+
+    def password_compare_error(self):
+        print("""
+                对不起，两次输入密码不一致！
+                """)
+
+    def error_pn(self):
+        print("""
+        对不起！请输入正确的手机号！
+        """)
+
+    def exist_pn(self):
+        print("""
+        对不起，您的手机号已经被注册！请勿重复注册！
+        """)
 
 
 class Product:
@@ -124,12 +155,53 @@ class CustomerHandler:
             self.aph.connect_to_cashier_error()
             logger.error("创建与结算端的TCP连接失败,msg:%s" % error)
 
+    def check_pn(self, pn, role):
+        if not self.db.user_register_cheker(pn, role):
+            self.aph.exist_pn()
+            self.start()
+
+        if not match_pn(pn):
+            self.aph.error_pn()
+            self.start()
+
     def register(self):
-        pass
+        """
+        用户注册
+        :return:
+        """
+        pn = input("请输入手机号：")
+        self.check_pn(pn, 0)
+        name = input("请输入姓名：")
+        # password = getpass.getpass("请输入密码：")
+        password1 = input("请输入密码：")
+        password2 = input("请再输入一次密码：")
+        if password1 != password2:
+            self.aph.password_compare_error()
+            self.start()
+
+        status, msg = self.db.user_register(name, password1, pn)
+        print(msg)
 
     def login(self):
+        """
+        用户端 用户登录
+        :return:
+        """
         # 登录成功后，返回登录成功的user_id, 利用user_id实例化用户购物车，ShoppingCart
-        pass
+        pn = input("请输入手机号：")
+        password = input("请输入密码：")
+        status, msg = self.db.user_login(pn, password, 0)
+        print(msg)
+        if status:
+            # 登录成功
+            while True:
+                self.aph.customer_memu()
+                user_input = input(">>")
+                point_func = self.customer_menu_map.get(user_input)
+                if not point_func:
+                    self.aph.error_input()
+                else:
+                    eval(change_point_func(point_func))
 
     def get_add_product_input(self):
         """
@@ -231,26 +303,9 @@ class CustomerHandler:
         """
         while True:
             self.aph.main_menu()
-            user_input = get_number_input(">>")
+            user_input = input(">>")
             point_func = self.start_menu_map.get(user_input, False)
             if not point_func:
                 self.aph.error_input()
             else:
                 eval(change_point_func(point_func))
-
-
-# a = CustomerHandler()
-# a.add_product()
-li = {'user_id': 1, 'shopping_cards': [{'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
-                                       {'product_id': 91701, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
-                                       {'product_id': 11111111, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}]}
-
-result = {
-    "success_list": [
-        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
-        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}
-    ],
-    "fail_list": [
-        {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7}
-    ]
-}

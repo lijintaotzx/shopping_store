@@ -149,7 +149,17 @@ class CashierHandler:
         结算员登录
         :return:
         """
-        pass
+        pn = input("请输入手机号：")
+        password = input("请输入密码：")
+        status, msg = self.db.user_login(pn, password, 2)
+        print(msg)
+
+        if status:
+            # 登录成功
+            self.waiting_for_connect()
+        else:
+            # 登录失败
+            self.start()
 
     def start(self):
         """
@@ -157,7 +167,3 @@ class CashierHandler:
         :return:
         """
         self.login()
-
-
-a = CashierHandler()
-a.waiting_for_connect()

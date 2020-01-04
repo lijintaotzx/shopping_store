@@ -76,14 +76,14 @@ class MysqlDB:
         self.db.commit()
         return True, "恭喜您！注册成功！"
 
-    def user_login(self, pn, password):
+    def user_login(self, pn, password, role):
         """
         用户登录
         :param pn: 用户手机号
         :param password: 用户密码
         :return: 登录结果
         """
-        sql = "SELECT name, pn, password FROM user WHERE pn={}".format(pn)
+        sql = "SELECT name, pn, password FROM user WHERE pn={} and role={}".format(pn, role)
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
 
@@ -235,3 +235,12 @@ class MysqlDB:
         )
         self.cursor.execute(sql)
         return self.cursor.fetchone()
+
+    def get_id(self, pn):
+        """
+        根据手机号查找到用户id
+        :return:
+        """
+        sql = "SELECT id FROM user WHERE pn={}".format(pn)
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()[0]
