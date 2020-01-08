@@ -5,7 +5,7 @@ from _decimal import Decimal
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
 from shopping_store.lib.project import get_request, change_point_func
-from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
+from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR, ADMIN_SOCKET_SERVER_ADDR
 from threading import Thread
 
 logger = Log("shopping_store_error")
@@ -79,14 +79,6 @@ class CashierHandler:
         total_amount = self.sum_shopping_cards_amount(eval(request_data)["shopping_cards"])
         self.success_send(connfd, total_amount)
 
-    def reduce_product_count(self, product_list):
-        """
-        扣除库存
-        :param product_list: 这里接收用户的一个支付成功的购物车列表，遍历里面的商品ID扣除库存（注意判断库存不能为负，否则打印log）
-        :return:
-        """
-        pass
-
     def product_not_enough(self):
         """
         库存不足通知提醒
@@ -108,6 +100,42 @@ class CashierHandler:
         """
         pass
 
+    def send_to_udp_server(self, data):
+        """
+        给后台发送信息
+        :return:
+        """
+        skfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        skfd.sendto(data.encode(), ADMIN_SOCKET_SERVER_ADDR)
+        skfd.close()
+
+    def reduce_product_count(self, product_list):
+        """
+        扣除库存
+        :param product_list: 这里接收用户的一个支付成功的购物车列表，
+        遍历里面的商品ID扣除库存（注意判断库存不能为负，否则打印log）
+        :return:
+        """
+        success_list = list()
+        fail_list = list()
+        for value in product_list['shopping_cards']:
+            product_id = value["product_id"]
+            product_name = value["name"]
+            product_count = value["count"]
+            num = self.db.get_product_count(product_id)
+            set_count = num - product_count
+            if set_count > 0:
+                self.db.update_product_count(product_id, set_count)
+                success_list.append(value)
+            elif set_count == 0:
+                self.db.update_product_count(product_id, set_count)
+                success_list.append(value)
+                data = "ID是%s的%s商品库存不足" % (product_id, product_name)
+                self.send_to_udp_server(data)
+            else:
+                fail_list.append(value)
+        return {"success_list": success_list, "fail_list": fail_list}
+
     def do_paying(self, connfd, request_data):
         """
         处理用户支付
@@ -119,8 +147,6 @@ class CashierHandler:
         total_amount = self.sum_shopping_cards_amount(eval(shopping_cards_msg)["shopping_cards"])
         if Decimal(total_amount) <= Decimal(user_pay_money):
             self.reduce_product_count(shopping_cards_msg)
-            print("接下来轮到小夫表演了...")
-            # TODO 继续操作
         else:
             self.fail_send(connfd, "支付金额不足！")
 
@@ -154,7 +180,18 @@ class CashierHandler:
         结算员登录
         :return:
         """
-        pass
+        pn = input("请输入手机号：")
+        password = input("请输入密码：")
+        status, msg, user_id = self.db.user_login(pn, password, 2)
+        print(msg)
+
+        if status:
+            # 登录成功
+            self.user_id = user_id
+            self.waiting_for_connect()
+        else:
+            # 登录失败
+            self.start()
 
     def start(self):
         """

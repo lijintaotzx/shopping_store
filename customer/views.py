@@ -190,7 +190,7 @@ class CustomerHandler:
         # 登录成功后，返回登录成功的user_id, 利用user_id实例化用户购物车，ShoppingCart
         pn = input("请输入手机号：")
         password = input("请输入密码：")
-        status, msg = self.db.user_login(pn, password, 0)
+        status, msg, user_id = self.db.user_login(pn, password, 0)
         print(msg)
         if status:
             # 登录成功

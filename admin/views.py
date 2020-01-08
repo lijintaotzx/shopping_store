@@ -197,7 +197,7 @@ class AdminHandler:
         pn = input("请输入手机号：")
         # password = getpass.getpass("请输入密码：")
         password = input("请输入密码：")
-        status, msg = self.db.user_login(pn, password, 1)
+        status, msg, user_id = self.db.user_login(pn, password, 1)
         print(msg)
 
         if status:

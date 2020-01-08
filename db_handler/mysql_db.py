@@ -83,16 +83,16 @@ class MysqlDB:
         :param password: 用户密码
         :return: 登录结果
         """
-        sql = "SELECT name, pn, password FROM user WHERE pn={} and role={}".format(pn, role)
+        sql = "SELECT id, name, pn, password FROM user WHERE pn={} and role={}".format(pn, role)
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
 
         if not len(data):
             return False, "用户不存在！"
 
-        name, pn, md5_password = data[0]
-        login_success_msg = (True, "您好！{}！".format(name))
-        login_error_msg = (False, "对不起，密码错误！")
+        id, name, pn, md5_password = data[0]
+        login_success_msg = (True, "您好！{}！".format(name), id)
+        login_error_msg = (False, "对不起，密码错误！", None)
         return login_success_msg if md5_password == self.password_encryption(password) else login_error_msg
 
     def remove_db_product(self, product_id):
@@ -244,3 +244,14 @@ class MysqlDB:
         sql = "SELECT id FROM user WHERE pn={}".format(pn)
         self.cursor.execute(sql)
         return self.cursor.fetchone()[0]
+
+    def get_product_count(self, product_id):
+        sql = "select count from product where product_id={};".format(product_id)
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()[0]
+
+    def update_product_count(self, product_id, product_count):
+        sql = "update product set count={} where product_id={};".format(product_count, product_id)
+        print(sql)
+        self.cursor.execute(sql)
+        self.db.commit()
