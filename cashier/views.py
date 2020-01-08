@@ -49,6 +49,8 @@ class CashierHandler:
         connfd.send("400 {}".format(msg).encode())
 
     def do_request(self, connfd, request_data):
+        request_data = eval(request_data)
+
         if len(request_data["shopping_cards"]):
             id, pn, name = self.db.get_user_msg_from_id(request_data["user_id"])
             print("{}来结算了".format(name))
@@ -113,26 +115,28 @@ class CashierHandler:
         :param request_data:shopping_cards_msg user_pay_money
         :return:
         """
-        shopping_cards_msg, user_pay_money = request_data.split(" ")
+        shopping_cards_msg, user_pay_money = request_data.split("$$")
         total_amount = self.sum_shopping_cards_amount(eval(shopping_cards_msg)["shopping_cards"])
         if Decimal(total_amount) <= Decimal(user_pay_money):
             self.reduce_product_count(shopping_cards_msg)
+            print("接下来轮到小夫表演了...")
             # TODO 继续操作
         else:
             self.fail_send(connfd, "支付金额不足！")
 
     def main_task(self, connfd, addr):
-        data = connfd.recv(1024)
-        request_mode, request_data = get_request(data.decode())
+        while True:
+            data = connfd.recv(1024)
+            request_mode, request_data = get_request(data.decode())
 
-        if request_mode == "REQUEST":
-            self.do_request(connfd, request_data)
-        elif request_mode == "SHOPPING_CARDS":
-            self.do_shopping_cards(connfd, request_data)
-        elif request_mode == "PAYING":
-            self.do_paying(request_data)
-        else:
-            logger.info("结算端接收请求异常, addr:{}, error_mode:{}".format(addr, request_mode))
+            if request_mode == "REQUEST":
+                self.do_request(connfd, request_data)
+            elif request_mode == "SHOPPING_CARDS":
+                self.do_shopping_cards(connfd, request_data)
+            elif request_mode == "PAYING":
+                self.do_paying(connfd, request_data)
+            else:
+                logger.info("结算端接收请求异常, addr:{}, error_mode:{}".format(addr, request_mode))
 
     def waiting_for_connect(self):
         """
@@ -140,6 +144,7 @@ class CashierHandler:
         :return:
         """
         while True:
+            print("等待结算中...")
             connfd, addr = self.skfd.accept()
             t = Thread(target=self.main_task, args=(connfd, addr))
             t.start()
@@ -149,17 +154,7 @@ class CashierHandler:
         结算员登录
         :return:
         """
-        pn = input("请输入手机号：")
-        password = input("请输入密码：")
-        status, msg = self.db.user_login(pn, password, 2)
-        print(msg)
-
-        if status:
-            # 登录成功
-            self.waiting_for_connect()
-        else:
-            # 登录失败
-            self.start()
+        pass
 
     def start(self):
         """
@@ -167,3 +162,7 @@ class CashierHandler:
         :return:
         """
         self.login()
+
+
+a = CashierHandler()
+a.waiting_for_connect()
