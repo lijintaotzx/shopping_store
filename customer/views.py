@@ -38,11 +38,11 @@ class CustomerPrintHandler:
         """
         print("""
                 *******用户操作菜单*******
-
-                1、添加商品到购物车
-                2、从购物车中移除商品
-                3、查看我的购物车
-                4、发起结算
+                1、查看商品列表
+                2、添加商品到购物车
+                3、从购物车中移除商品
+                4、查看我的购物车
+                5、发起结算
 
                 ************************
                 """)
@@ -81,8 +81,21 @@ class CustomerPrintHandler:
 
     def product_list(self, item):
         name, description, price, product_id, count = item
-        print("商品名：{}，备注：{}，售价：{}，商品id：{}，库存：{} ".format(
-            name, description, price, product_id, count))
+        print("商品id：{}，商品名：{}，备注：{}，售价：{}，库存：{} ".format(
+            product_id, name, description, price, count))
+
+    def my_shop_cards(self, shop_cards):
+        if not len(shop_cards):
+            print("您的购物车空空如也哦！")
+        else:
+            total_amount = Decimal("0.00")
+            for product in shop_cards:
+                info = "商品ID：{}，商品名：{}，价格：{}，数量：{}".format(
+                    product.product_id, product.name, product.price, product.count
+                )
+                print(info)
+                total_amount += product.price * product.count
+            print("总价：{}".format(total_amount))
 
 
 class Product:
@@ -106,13 +119,6 @@ class ShoppingCart:
         self.__user_id = user_id
         self.product_list = []
 
-    def my_product_list(self):
-        """
-        返回购物车中的商品信息
-        :return:
-        """
-        return self.product_list
-
     def add_product(self, product):
         self.product_list.append(product)
 
@@ -134,6 +140,8 @@ class CustomerHandler:
     def __init__(self):
         self.db = MysqlDB()
         self.aph = CustomerPrintHandler()
+        self.user_id = None
+        self.shopping_cart = None
 
         # 主函数映射方法
         self.start_menu_map = {
@@ -143,13 +151,12 @@ class CustomerHandler:
 
         # 用户菜单函数映射
         self.customer_menu_map = {
-            "1": "add_product",  # 添加商品到购物车
-            "2": "remove_product",  # 从购物车中移除商品
-            "3": "get_my_orders",  # 查看我的购物车
-            "4": "paying",  # 发起结算
+            "1": "get_product_list",  # 查看商品列表
+            "2": "add_product",  # 添加商品到购物车
+            "3": "remove_product",  # 从购物车中移除商品
+            "4": "get_my_shopping_carts",  # 查看我的购物车
+            "5": "paying",  # 发起结算
         }
-        self.user_id = 1
-        self.shopping_cart = ShoppingCart(user_id=1)  # TODO 测试代码
 
     def create_tcp_socket(self):
         try:
@@ -199,6 +206,8 @@ class CustomerHandler:
         print(msg)
         if status:
             # 登录成功
+            self.user_id = user_id  # 记录用户ID
+            self.shopping_cart = ShoppingCart(user_id=user_id)  # 实例化购物车
             while True:
                 self.aph.customer_memu()
                 user_input = input(">>")
@@ -292,7 +301,7 @@ class CustomerHandler:
         获取我的购物车商品列表
         :return:
         """
-        pass
+        self.aph.my_shop_cards(self.shopping_cart.product_list)
 
     def get_product_list(self):
         """

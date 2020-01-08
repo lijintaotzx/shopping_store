@@ -88,7 +88,7 @@ class MysqlDB:
         data = self.cursor.fetchall()
 
         if not len(data):
-            return False, "用户不存在！"
+            return False, "用户不存在！", None
 
         id, name, pn, md5_password = data[0]
         login_success_msg = (True, "您好！{}！".format(name), id)
