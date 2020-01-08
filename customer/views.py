@@ -79,6 +79,11 @@ class CustomerPrintHandler:
         对不起，您的手机号已经被注册！请勿重复注册！
         """)
 
+    def product_list(self, item):
+        name, description, price, product_id, count = item
+        print("商品名：{}，备注：{}，售价：{}，商品id：{}，库存：{} ".format(
+            name, description, price, product_id, count))
+
 
 class Product:
     """
@@ -282,19 +287,20 @@ class CustomerHandler:
         else:
             self.aph.paying_error(msg)
 
-    def get_product_list(self):
-        """
-        获取商品信息列表
-        :return:
-        """
-        pass
-
     def get_my_shopping_carts(self):
         """
         获取我的购物车商品列表
         :return:
         """
         pass
+
+    def get_product_list(self):
+        """
+        获取商品信息列表
+        :return:
+        """
+        for item in self.db.get_product_list_db():
+            self.aph.product_list(item)
 
     def start(self):
         """
