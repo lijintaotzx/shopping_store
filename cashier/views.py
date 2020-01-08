@@ -30,6 +30,8 @@ class CashierHandler:
     def __init__(self):
         self.db = MysqlDB()
         self.cph = CashierPrintHandler()
+        self.user_id = None  # 正在结算的用户ID
+        self.cashier_id = None  # 结算员ID
 
         self.create_tcp_server()
 
@@ -53,6 +55,7 @@ class CashierHandler:
 
         if len(request_data["shopping_cards"]):
             id, pn, name = self.db.get_user_msg_from_id(request_data["user_id"])
+            self.user_id = id
             print("{}来结算了".format(name))
             self.success_send(connfd, "request successful.")
         else:
@@ -86,14 +89,35 @@ class CashierHandler:
         """
         pass
 
-    def commit_record(self):
+    def sum_shopping_cards_profit(self, shopping_cards):
+        total_profit = Decimal("0.00")
+        for item in shopping_cards:
+            profit = self.db.get_profit_by_product_id(item["product_id"])
+            total_profit += profit * item["count"]
+        return total_profit
+
+    def commit_record(self, commit_record):
         """
         保存交易记录
         :return:
         """
-        pass
 
-    def export_ticket(self):
+        commit_record = {
+            "success_list": [
+                {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
+                {'product_id': 91701, 'name': '笔记本', 'price': Decimal('20.00'), 'count': 7}
+            ],
+            "fail_list": [
+                {'product_id': 858, 'name': '哦哦', 'price': Decimal('20.00'), 'count': 7}
+            ]
+        }
+        total_amount = self.sum_shopping_cards_amount(commit_record["success_list"])
+        total_profit = self.sum_shopping_cards_profit(commit_record["success_list"])
+        order_id = self.db.create_order_record(self.user_id, self.cashier_id, total_amount, total_profit)
+        for item in commit_record["success_list"]:
+            self.db.create_order_detail(order_id, item["product_id"], item["count"], item["price"])
+
+    def export_ticket(self, pay_result, pay_money, money_return):
         """
         打印小票
         :return:
@@ -145,8 +169,14 @@ class CashierHandler:
         """
         shopping_cards_msg, user_pay_money = request_data.split("$$")
         total_amount = self.sum_shopping_cards_amount(eval(shopping_cards_msg)["shopping_cards"])
-        if Decimal(total_amount) <= Decimal(user_pay_money):
-            self.reduce_product_count(shopping_cards_msg)
+        money_return = Decimal(user_pay_money) - Decimal(total_amount)  # 计算找零金额
+        if money_return >= 0:
+            # 结算、减库存
+            pay_result = self.reduce_product_count(shopping_cards_msg)
+            # 创建订单记录
+            self.commit_record(pay_result)
+            # 打印小票
+            self.export_ticket(pay_result, user_pay_money, money_return)
         else:
             self.fail_send(connfd, "支付金额不足！")
 
@@ -187,7 +217,7 @@ class CashierHandler:
 
         if status:
             # 登录成功
-            self.user_id = user_id
+            self.cashier_id = user_id
             self.waiting_for_connect()
         else:
             # 登录失败
@@ -199,7 +229,3 @@ class CashierHandler:
         :return:
         """
         self.login()
-
-
-a = CashierHandler()
-a.waiting_for_connect()

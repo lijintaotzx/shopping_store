@@ -1,5 +1,6 @@
 # coding=utf-8
 import hashlib
+import time
 
 import pymysql
 
@@ -253,5 +254,32 @@ class MysqlDB:
     def update_product_count(self, product_id, product_count):
         sql = "update product set count={} where product_id={};".format(product_count, product_id)
         print(sql)
+        self.cursor.execute(sql)
+        self.db.commit()
+
+    def get_profit_by_product_id(self, product_id):
+        sql = "SELECT source_price, price FROM product WHERE product_id={}".format(product_id)
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()[0]
+
+    def create_order_record(self, user_id, cashier_id, total_amount, total_profit):
+        order_id = time.time()
+        sql = "INSERT INTO order_record (user_id, profit, order_id, cashier_id, amount) VALUES ('{}', '{}', '{}', '{}', '{}');".format(
+            user_id,
+            total_profit,
+            order_id,
+            cashier_id,
+            total_amount
+        )
+        self.cursor.execute(sql)
+        self.db.commit()
+        select_sql = "SELECT id FROM order_record WHERE order_id={}".format(order_id)
+        self.cursor.execute(select_sql)
+        return self.cursor.fetchone()[0]
+
+    def create_order_detail(self, order_id, product_id, count, price):
+        sql = "INSERT INTO order_record_detail (order_id, product_id, count, price) VALUES ('{}', '{}', '{}', '{}');".format(
+            order_id, product_id, count, price
+        )
         self.cursor.execute(sql)
         self.db.commit()

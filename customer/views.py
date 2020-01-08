@@ -199,7 +199,6 @@ class CustomerHandler:
         用户端 用户登录
         :return:
         """
-        # 登录成功后，返回登录成功的user_id, 利用user_id实例化用户购物车，ShoppingCart
         pn = input("请输入手机号：")
         password = input("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 0)
@@ -251,7 +250,6 @@ class CustomerHandler:
                 count=user_input_count,
             )
         )
-        # print(self.transform_shopping_cards())
 
     def remove_product(self):
         """
