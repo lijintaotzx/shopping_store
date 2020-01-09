@@ -294,8 +294,8 @@ class CustomerHandler:
                 else:
                     request_data = "PAYING {}$${}".format(self.transform_shopping_cards(), self.total_price)
                     self.skfd.send(request_data.encode())
-                    # TODO
                     status_code, msg = get_request(self.skfd.recv(1024).decode())
+                    print(msg)
             else:
                 self.aph.paying_error(msg)
         else:

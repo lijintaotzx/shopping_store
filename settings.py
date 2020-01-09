@@ -9,8 +9,8 @@ DATABASE = 'shopping_store'
 CHARSET = 'utf8'
 
 # Socket相关配置信息
-ADMIN_SOCKET_SERVER_ADDR = ("0.0.0.0", 10012)
-CASHIER_SOCKET_SERVER_ADDR = ("0.0.0.0", 10014)
+ADMIN_SOCKET_SERVER_ADDR = ("0.0.0.0", 10088)
+CASHIER_SOCKET_SERVER_ADDR = ("0.0.0.0", 10099)
 
 # 异常日志文件路径
 LOG_PATH = {
@@ -19,4 +19,5 @@ LOG_PATH = {
 }
 
 # 缺货库存输出文件路径
-LACKED_PRODUCT_PATH = "/Users/tzx/test/shopping_store"
+LACKED_PRODUCT_PATH = "/Users/tzx/test/shopping_store/"
+USER_TICKET_PATH = "/Users/tzx/test/shopping_store/"

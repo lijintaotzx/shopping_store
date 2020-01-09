@@ -1,11 +1,19 @@
 # coding=utf-8
+import datetime
 import socket
 from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
-from shopping_store.lib.project import get_request, change_point_func, user_input
-from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR, ADMIN_SOCKET_SERVER_ADDR
+from shopping_store.lib.project import (
+    get_request,
+    user_input,
+)
+from shopping_store.settings import (
+    CASHIER_SOCKET_SERVER_ADDR,
+    ADMIN_SOCKET_SERVER_ADDR,
+    USER_TICKET_PATH,
+)
 from threading import Thread
 
 logger = Log("shopping_store_error")
@@ -107,12 +115,38 @@ class CashierHandler:
         for item in commit_record["success_list"]:
             self.db.create_order_detail(order_id, item["product_id"], item["count"], item["price"])
 
-    def export_ticket(self, pay_result, pay_money, money_return):
+    def get_export_ticket_paths(self):
+        """
+        打印小票文件路径及文件
+        :return:
+        """
+        t = datetime.datetime.now()
+        str_t1 = t.strftime("%Y-%m-%d_%H:%M:%S")
+        return USER_TICKET_PATH + str_t1 + ".txt"
+
+    def export_ticket(self, pay_result, total_amount, user_pay_money, money_return):
         """
         打印小票
         :return:
         """
-        pass
+        id, pn, name = self.db.get_user_msg_from_id(self.cashier_id)
+
+        file_path = self.get_export_ticket_paths()
+        f = open(file_path, 'w+')
+        f.write('                消费单' + '\n')
+        f.write("-------------***********-------------" + "\n")
+        f.write("结算单号:                  %s" % id + "\n")
+        for into in pay_result["success_list"]:
+            f.write('商品名：{}，单价：{}元，个数：{}个\n'.format(into["name"], into["price"], into['count']))
+        f.write(
+            "应付:                    %s" % total_amount + '\n'
+                                                         "共付:                    %s" % user_pay_money + '\n'
+                                                                                                        "找零:                    %s" % money_return + "\n")
+        f.write("结算员：{}（ID：{}）\n".format(name, id))
+        f.write("结算时间：{}".format(datetime.datetime.now()))
+        f.flush()
+        f.close()
+        return "小票已保存至:{}".format(file_path)
 
     def send_to_udp_server(self, data):
         """
@@ -166,15 +200,19 @@ class CashierHandler:
             # 创建订单记录
             self.commit_record(pay_result)
             # 打印小票
-            self.export_ticket(pay_result, user_pay_money, money_return)
-            # TODO
+            ticket_msg = self.export_ticket(pay_result, total_amount, user_pay_money, money_return)
+            self.success_send(connfd, ticket_msg)
         else:
             self.fail_send(connfd, "支付金额不足！")
 
     def main_task(self, connfd, addr):
         while True:
             data = connfd.recv(1024)
-            request_mode, request_data = get_request(data.decode())
+            try:
+                request_mode, request_data = get_request(data.decode())
+            except Exception as info:
+                logger.info(info)
+                continue
 
             if request_mode == "REQUEST":
                 self.do_request(connfd, request_data)
