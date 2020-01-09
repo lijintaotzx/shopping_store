@@ -5,7 +5,7 @@ mysql_logger = Log("mysql_error")
 
 
 def try_db_sql(func):
-    def wapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
         except Exception as err:
@@ -13,7 +13,7 @@ def try_db_sql(func):
             return "MySQL数据库异常！"
         return result
 
-    return wapper
+    return wrapper
 
 
 def is_admin(admin_tag):

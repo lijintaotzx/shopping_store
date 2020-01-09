@@ -4,7 +4,7 @@ from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
-from shopping_store.lib.project import get_number_input, change_point_func, get_request, match_pn
+from shopping_store.lib.project import get_number_input, change_point_func, get_request, match_pn, user_input
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR
 
 logger = Log("shopping_store_error")
@@ -181,12 +181,12 @@ class CustomerHandler:
         用户注册
         :return:
         """
-        pn = input("请输入手机号：")
+        pn = user_input("请输入手机号：")
         self.check_pn(pn, 0)
-        name = input("请输入姓名：")
+        name = user_input("请输入姓名：")
         # password = getpass.getpass("请输入密码：")
-        password1 = input("请输入密码：")
-        password2 = input("请再输入一次密码：")
+        password1 = user_input("请输入密码：")
+        password2 = user_input("请再输入一次密码：")
         if password1 != password2:
             self.aph.password_compare_error()
             self.start()
@@ -199,8 +199,8 @@ class CustomerHandler:
         用户端 用户登录
         :return:
         """
-        pn = input("请输入手机号：")
-        password = input("请输入密码：")
+        pn = user_input("请输入手机号：")
+        password = user_input("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 0)
         print(msg)
         if status:
@@ -209,8 +209,8 @@ class CustomerHandler:
             self.shopping_cart = ShoppingCart(user_id=user_id)  # 实例化购物车
             while True:
                 self.aph.customer_memu()
-                user_input = input(">>")
-                point_func = self.customer_menu_map.get(user_input)
+                user_input_msg = user_input(">>")
+                point_func = self.customer_menu_map.get(user_input_msg)
                 if not point_func:
                     self.aph.error_input()
                 else:
@@ -323,8 +323,8 @@ class CustomerHandler:
         """
         while True:
             self.aph.main_menu()
-            user_input = input(">>")
-            point_func = self.start_menu_map.get(user_input, False)
+            user_input_msg = user_input(">>")
+            point_func = self.start_menu_map.get(user_input_msg, False)
             if not point_func:
                 self.aph.error_input()
             else:

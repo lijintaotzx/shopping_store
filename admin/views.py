@@ -9,7 +9,7 @@ from shopping_store.lib.project import (
     match_pn,
     change_point_func,
     get_number_input,
-)
+    user_input)
 from shopping_store.settings import (
     ADMIN_SOCKET_SERVER_ADDR,
     LACKED_PRODUCT_PATH,
@@ -176,12 +176,12 @@ class AdminHandler:
         用户注册
         :return:
         """
-        pn = input("请输入手机号：")
+        pn = user_input("请输入手机号：")
         self.check_pn(pn, 1)
-        name = input("请输入姓名：")
+        name = user_input("请输入姓名：")
         # password = getpass.getpass("请输入密码：")
-        password1 = input("请输入密码：")
-        password2 = input("请再输入一次密码：")
+        password1 = user_input("请输入密码：")
+        password2 = user_input("请再输入一次密码：")
         if password1 != password2:
             self.aph.password_compare_error()
             self.start()
@@ -194,9 +194,9 @@ class AdminHandler:
         用户登录
         :return:
         """
-        pn = input("请输入手机号：")
+        pn = user_input("请输入手机号：")
         # password = getpass.getpass("请输入密码：")
-        password = input("请输入密码：")
+        password = user_input("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 1)
         print(msg)
 
@@ -243,7 +243,7 @@ class AdminHandler:
         :return: 新添商品名称
         """
         while True:
-            name = input("请输入新添商品名称:")
+            name = user_input("请输入新添商品名称:")
             if not self.db.check_product_name(name):
                 print("商品名称重复")
                 continue
@@ -306,11 +306,11 @@ class AdminHandler:
         添加结算员
         :return:
         """
-        pn = input("请输入结算员手机号：")
+        pn = user_input("请输入结算员手机号：")
         self.check_pn(pn, 2)
-        name = input("请输入结算员姓名：")
+        name = user_input("请输入结算员姓名：")
         # password = getpass.getpass("请输入密码：")
-        password = input("请输入结算员密码：")
+        password = user_input("请输入结算员密码：")
         status, msg = self.db.user_register(name, password, pn, role=2)
         print(msg)
 
@@ -328,8 +328,8 @@ class AdminHandler:
         :return:
         """
         while True:
-            order_begin = input("请输入要查询订单的开始时间:")
-            order_end = input("请输入要查询订单的结束时间:")
+            order_begin = user_input("请输入要查询订单的开始时间:")
+            order_end = user_input("请输入要查询订单的结束时间:")
             if self.format_datetime(order_begin) and self.format_datetime(order_end):
                 return order_begin, order_end
             else:
@@ -398,7 +398,7 @@ class AdminHandler:
         data = self.db.lacked_product()
         for info in data:
             print(self.aph.format_product(info))
-        educe = input("请问是否需要导出文件:")
+        educe = user_input("请问是否需要导出文件:")
         if educe == "是":
             file_path = self.get_lacked_product_file_path()
             f = open(file_path, 'w+')
@@ -414,10 +414,9 @@ class AdminHandler:
         :return:
         """
         while True:
-            # TODO 注销退出
             self.aph.admin_menu()
-            user_input = input(">>")
-            point_func = self.admin_menu_map.get(user_input)
+            user_input_msg = user_input(">>")
+            point_func = self.admin_menu_map.get(user_input_msg)
             if not point_func:
                 self.aph.error_input()
             else:
@@ -431,8 +430,6 @@ class AdminHandler:
         while True:
             data, addr = self.skfd.recvfrom(1024)
             print("您有新的消息！来自{}，消息内容：{}".format(addr, data.decode()))
-            # request_mode, content = self.get_request(data)
-            # print(request_mode)
 
     def start(self):
         """
@@ -441,8 +438,8 @@ class AdminHandler:
         """
         while True:
             self.aph.main_menu()
-            user_input = input(">>")
-            point_func = self.start_menu_map.get(user_input, False)
+            user_input_msg = user_input(">>")
+            point_func = self.start_menu_map.get(user_input_msg, False)
             if not point_func:
                 self.aph.error_input()
             else:

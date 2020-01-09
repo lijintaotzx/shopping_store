@@ -4,7 +4,7 @@ from _decimal import Decimal
 
 from shopping_store.db_handler.mysql_db import MysqlDB
 from shopping_store.lib.logger import Log
-from shopping_store.lib.project import get_request, change_point_func
+from shopping_store.lib.project import get_request, change_point_func, user_input
 from shopping_store.settings import CASHIER_SOCKET_SERVER_ADDR, ADMIN_SOCKET_SERVER_ADDR
 from threading import Thread
 
@@ -201,8 +201,8 @@ class CashierHandler:
         结算员登录
         :return:
         """
-        pn = input("请输入手机号：")
-        password = input("请输入密码：")
+        pn = user_input("请输入手机号：")
+        password = user_input("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 2)
         print(msg)
 

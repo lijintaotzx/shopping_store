@@ -16,6 +16,9 @@ def get_number_input(msg, is_float=False):
     err_msg = "您的输入有误！请重新输入！"
     while True:
         user_input = input(msg)
+        if not user_input:
+            continue
+
         if user_input == "q":
             return user_input
 
@@ -33,6 +36,15 @@ def get_number_input(msg, is_float=False):
                 logger.info("用户输入错误，msg:{}".format(err))
                 print(err_msg)
                 continue
+
+
+def user_input(msg):
+    while True:
+        user_input = input(msg)
+        if not user_input:
+            continue
+        else:
+            return user_input
 
 
 def match_pn(pn):
