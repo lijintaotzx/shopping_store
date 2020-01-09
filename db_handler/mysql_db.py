@@ -30,7 +30,8 @@ class MysqlDB:
             user=user,
             password=password,
             database=database,
-            charset=charset
+            charset=charset,
+            autocommit=True
         )
 
         self.cursor = self.db.cursor()
@@ -260,7 +261,8 @@ class MysqlDB:
     def get_profit_by_product_id(self, product_id):
         sql = "SELECT source_price, price FROM product WHERE product_id={}".format(product_id)
         self.cursor.execute(sql)
-        return self.cursor.fetchone()[0]
+        source_price, price = self.cursor.fetchone()
+        return price - source_price
 
     def create_order_record(self, user_id, cashier_id, total_amount, total_profit):
         order_id = time.time()
@@ -273,7 +275,7 @@ class MysqlDB:
         )
         self.cursor.execute(sql)
         self.db.commit()
-        select_sql = "SELECT id FROM order_record WHERE order_id={}".format(order_id)
+        select_sql = "SELECT order_id FROM order_record WHERE order_id={}".format(order_id)
         self.cursor.execute(select_sql)
         return self.cursor.fetchone()[0]
 

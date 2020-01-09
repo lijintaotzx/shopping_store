@@ -441,7 +441,7 @@ class AdminHandler:
         """
         while True:
             self.aph.main_menu()
-            user_input = get_number_input(">>")
+            user_input = input(">>")
             point_func = self.start_menu_map.get(user_input, False)
             if not point_func:
                 self.aph.error_input()

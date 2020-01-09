@@ -280,15 +280,22 @@ class CustomerHandler:
         self.create_tcp_socket()
         request_data = "REQUEST {}".format(self.transform_shopping_cards())
         self.skfd.send(request_data.encode())
-
         status_code, msg = get_request(self.skfd.recv(1024).decode())
 
         if status_code == "200":
             self.send_shopping_cards()
-            status_code, msg = self.skfd.recv(1024).decode()
+            status_code, msg = get_request(self.skfd.recv(1024).decode())
+
             if status_code == "200":
                 # TODO 范竹雲
-                pass
+                self.total_price = Decimal(get_number_input("请输入付款金额：", is_float=True))
+                if self.total_price < Decimal(msg):
+                    print("金额不足")
+                else:
+                    request_data = "PAYING {}$${}".format(self.transform_shopping_cards(), self.total_price)
+                    self.skfd.send(request_data.encode())
+                    # TODO
+                    status_code, msg = get_request(self.skfd.recv(1024).decode())
             else:
                 self.aph.paying_error(msg)
         else:

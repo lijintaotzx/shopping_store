@@ -101,16 +101,6 @@ class CashierHandler:
         保存交易记录
         :return:
         """
-
-        commit_record = {
-            "success_list": [
-                {'product_id': 63046, 'name': '电脑', 'price': Decimal('20.00'), 'count': 7},
-                {'product_id': 91701, 'name': '笔记本', 'price': Decimal('20.00'), 'count': 7}
-            ],
-            "fail_list": [
-                {'product_id': 858, 'name': '哦哦', 'price': Decimal('20.00'), 'count': 7}
-            ]
-        }
         total_amount = self.sum_shopping_cards_amount(commit_record["success_list"])
         total_profit = self.sum_shopping_cards_profit(commit_record["success_list"])
         order_id = self.db.create_order_record(self.user_id, self.cashier_id, total_amount, total_profit)
@@ -172,11 +162,12 @@ class CashierHandler:
         money_return = Decimal(user_pay_money) - Decimal(total_amount)  # 计算找零金额
         if money_return >= 0:
             # 结算、减库存
-            pay_result = self.reduce_product_count(shopping_cards_msg)
+            pay_result = self.reduce_product_count(eval(shopping_cards_msg))
             # 创建订单记录
             self.commit_record(pay_result)
             # 打印小票
             self.export_ticket(pay_result, user_pay_money, money_return)
+            # TODO
         else:
             self.fail_send(connfd, "支付金额不足！")
 
