@@ -265,7 +265,7 @@ class MysqlDB:
         return price - source_price
 
     def create_order_record(self, user_id, cashier_id, total_amount, total_profit):
-        order_id = time.time()
+        order_id = int(time.time())
         sql = "INSERT INTO order_record (user_id, profit, order_id, cashier_id, amount) VALUES ('{}', '{}', '{}', '{}', '{}');".format(
             user_id,
             total_profit,
