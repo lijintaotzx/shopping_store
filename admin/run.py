@@ -1,4 +1,7 @@
 # coding=utf-8
+import sys
+sys.path.append('/Users/tzx/workspace/tarena')
+
 from threading import Thread
 
 from shopping_store.admin.views import AdminHandler

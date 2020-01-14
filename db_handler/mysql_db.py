@@ -254,7 +254,6 @@ class MysqlDB:
 
     def update_product_count(self, product_id, product_count):
         sql = "update product set count={} where product_id={};".format(product_count, product_id)
-        print(sql)
         self.cursor.execute(sql)
         self.db.commit()
 

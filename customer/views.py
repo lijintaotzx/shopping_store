@@ -1,4 +1,5 @@
 # coding=utf-8
+import getpass
 import socket
 from _decimal import Decimal
 
@@ -200,7 +201,7 @@ class CustomerHandler:
         :return:
         """
         pn = user_input("请输入手机号：")
-        password = user_input("请输入密码：")
+        password = getpass.getpass("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 0)
         print(msg)
         if status:

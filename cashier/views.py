@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import getpass
 import socket
 from _decimal import Decimal
 
@@ -240,7 +241,7 @@ class CashierHandler:
         :return:
         """
         pn = user_input("请输入手机号：")
-        password = user_input("请输入密码：")
+        password = getpass.getpass("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 2)
         print(msg)
 

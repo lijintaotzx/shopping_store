@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import getpass
 import re
 import socket
 from _decimal import Decimal
@@ -195,8 +196,7 @@ class AdminHandler:
         :return:
         """
         pn = user_input("请输入手机号：")
-        # password = getpass.getpass("请输入密码：")
-        password = user_input("请输入密码：")
+        password = getpass.getpass("请输入密码：")
         status, msg, user_id = self.db.user_login(pn, password, 1)
         print(msg)
 
