@@ -53,7 +53,17 @@ def match_pn(pn):
     :param pn: 手机号
     :return: True or False
     """
-    return re.match(r"^1[3578]\d{9}$", pn)
+    return True if re.match(r"^1[3578]\d{9}$", pn) else False
+
+
+def format_datetime(input_date):
+    """
+    匹配用户输入的日期格式
+    :param input_date: 2019-10-03
+    :return: True or False
+    """
+    formater = r"^[1-9]\d{0,3}-(1[0-2]|0?[1-9])-(3[01]|[12]\d|0?[1-9])$"
+    return re.match(formater, input_date)
 
 
 def change_point_func(point_func):

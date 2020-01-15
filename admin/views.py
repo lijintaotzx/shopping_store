@@ -1,7 +1,6 @@
 # coding=utf-8
 import datetime
 import getpass
-import re
 import socket
 from _decimal import Decimal
 
@@ -10,7 +9,9 @@ from shopping_store.lib.project import (
     match_pn,
     change_point_func,
     get_number_input,
-    user_input)
+    user_input,
+    format_datetime,
+)
 from shopping_store.settings import (
     ADMIN_SOCKET_SERVER_ADDR,
     LACKED_PRODUCT_PATH,
@@ -318,10 +319,6 @@ class AdminHandler:
         product_id = get_number_input("请输入下架商品的ID：")
         print(self.db.remove_db_product(product_id))
 
-    def format_datetime(self, input_date):
-        formater = r"^[1-9]\d{0,3}-(1[0-2]|0?[1-9])-(3[01]|[12]\d|0?[1-9])$"
-        return re.match(formater, input_date)
-
     def affirm_time(self):
         """
         匹配返回用户输入的时间段
@@ -330,7 +327,7 @@ class AdminHandler:
         while True:
             order_begin = user_input("请输入要查询订单的开始时间:")
             order_end = user_input("请输入要查询订单的结束时间:")
-            if self.format_datetime(order_begin) and self.format_datetime(order_end):
+            if format_datetime(order_begin) and format_datetime(order_end):
                 return order_begin, order_end
             else:
                 print("输入有误 !格式:'2019-10-10'!")
