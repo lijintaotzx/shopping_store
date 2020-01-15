@@ -165,6 +165,12 @@ class AdminHandler:
         self.skfd.bind(ADMIN_SOCKET_SERVER_ADDR)
 
     def check_pn(self, pn, role):
+        """
+        验证手机号是否可用
+        :param pn: 手机号
+        :param role: 用户角色
+        :return:
+        """
         if not self.db.user_register_cheker(pn, role):
             self.aph.exist_pn()
             self.start()
@@ -181,7 +187,6 @@ class AdminHandler:
         pn = user_input("请输入手机号：")
         self.check_pn(pn, 1)
         name = user_input("请输入姓名：")
-        # password = getpass.getpass("请输入密码：")
         password1 = user_input("请输入密码：")
         password2 = user_input("请再输入一次密码：")
         if password1 != password2:
@@ -203,7 +208,6 @@ class AdminHandler:
 
         if status:
             # 登录成功
-            __admin_user_tag = True
             self.admin_menu_handler()
         else:
             # 登录失败
@@ -229,15 +233,6 @@ class AdminHandler:
             num += ord(i)
         return num
 
-    def price_compare(self, source_price, price):
-        """
-        比较商品进价，售价大小
-        :param source_price: 商品进价
-        :param price: 商品售价
-        :return: True 或者 False
-        """
-        return source_price < price
-
     def get_name(self):
         """
         判断新添商品名称是否重复
@@ -250,6 +245,15 @@ class AdminHandler:
                 continue
             else:
                 return name
+
+    def price_compare(self, source_price, price):
+        """
+        比较商品进价，售价大小
+        :param source_price: 商品进价
+        :param price: 商品售价
+        :return: True 或者 False
+        """
+        return source_price < price
 
     def get_price(self):
         """
@@ -301,7 +305,6 @@ class AdminHandler:
             else:
                 continue
 
-    # @is_admin(__admin_user_tag)
     def add_cashier(self):
         """
         添加结算员

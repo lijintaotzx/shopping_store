@@ -4,6 +4,7 @@ import time
 
 import pymysql
 
+from shopping_store.lib.decorator import try_db_sql
 from shopping_store.settings import (
     MYSQL_HOST,
     MYSQL_PORT,
@@ -36,16 +37,9 @@ class MysqlDB:
 
         self.cursor = self.db.cursor()
 
-    def password_encryption(self, password):
-        """
-        密码加密（MD5）
-        :param password:密码
-        :return:加密后的密码
-        """
-        h = hashlib.md5()
-        h.update(password.encode())
-        return h.hexdigest()
 
+
+    @try_db_sql
     def user_register_cheker(self, pn, role):
         """
         检查用户是否可以注册
@@ -58,7 +52,17 @@ class MysqlDB:
         data = self.cursor.fetchall()
         return len(data) == 0
 
-    # @try_db_sql
+    def password_encryption(self, password):
+        """
+        密码加密（MD5）
+        :param password:密码
+        :return:加密后的密码
+        """
+        h = hashlib.md5()
+        h.update(password.encode())
+        return h.hexdigest()
+
+    @try_db_sql
     def user_register(self, name, password, pn, role=0):
         """
         用户注册
@@ -78,6 +82,7 @@ class MysqlDB:
         self.db.commit()
         return True, "恭喜您！注册成功！"
 
+    @try_db_sql
     def user_login(self, pn, password, role):
         """
         用户登录
@@ -97,6 +102,7 @@ class MysqlDB:
         login_error_msg = (False, "对不起，密码错误！", None)
         return login_success_msg if md5_password == self.password_encryption(password) else login_error_msg
 
+    @try_db_sql
     def remove_db_product(self, product_id):
         sql = "UPDATE product SET is_del=True WHERE product_id={}".format(product_id)
         self.cursor.execute(sql)
@@ -109,6 +115,7 @@ class MysqlDB:
         else:
             return "商品ID：{}下架失败!".format(product_id)
 
+    @try_db_sql
     def check_product_name(self, product_name):
         """
         查询新添加的product_name是否重复
@@ -123,23 +130,22 @@ class MysqlDB:
         else:
             return False
 
+    @try_db_sql
     def add_db_product(self, add_product):
         """
-        # TODO
         :param add_product:
         :return:
         """
-        try:
-            sql = "INSERT INTO `product` " \
-                  "(`name`, `description`, `source_price`, `price`, `count`,`product_id`) " \
-                  "VALUES {};".format(add_product)
-            self.cursor.execute(sql)
-            self.db.commit()
-            return "新商品添加成功！"
-        except:
-            self.db.rollback()
-            return "新商品添加失败！"
+        sql = "INSERT INTO `product` " \
+              "(`name`, `description`, `source_price`, `price`, `count`,`product_id`) " \
+              "VALUES {};".format(add_product)
+        self.cursor.execute(sql)
+        self.db.commit()
+        return "新商品添加成功！"
+        self.db.rollback()
+        return "新商品添加失败！"
 
+    @try_db_sql
     def get_product_list_db(self, is_admin=False):
         """
         获取商品信息列表
@@ -153,6 +159,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    @try_db_sql
     def change_product_count_db(self, product_id, change_count):
         sql1 = "UPDATE product set count = %s WHERE product_id = %s" % (change_count, product_id)
         self.cursor.execute(sql1)
@@ -163,6 +170,7 @@ class MysqlDB:
 
         print("修改成功！当前库存:{}".format(product[0]))
 
+    @try_db_sql
     def judge_product_id(self, product_id):
         """
         判断product_id是否存在
@@ -180,6 +188,7 @@ class MysqlDB:
             print("商品ID不存在！")
             return False
 
+    @try_db_sql
     def get_order_list_db(self, order_begin, order_end):
         """
         获取订单列表(刘梓威)
@@ -195,6 +204,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    @try_db_sql
     def get_user_msg_from_id(self, user_id):
         """
         获取用户基本信息
@@ -205,6 +215,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchone()
 
+    @try_db_sql
     def get_order_details_db(self, order_id):
         """
         获取订单详情
@@ -217,6 +228,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    @try_db_sql
     def lacked_product(self):
         """
         获取缺货库存
@@ -226,6 +238,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    @try_db_sql
     def get_product_msg(self, product_id):
         """
         获取商品信息
@@ -238,6 +251,7 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchone()
 
+    @try_db_sql
     def get_id(self, pn):
         """
         根据手机号查找到用户id
@@ -247,22 +261,26 @@ class MysqlDB:
         self.cursor.execute(sql)
         return self.cursor.fetchone()[0]
 
+    @try_db_sql
     def get_product_count(self, product_id):
-        sql = "select count from product where product_id={};".format(product_id)
+        sql = "SELECT count FROM product WHERE product_id={};".format(product_id)
         self.cursor.execute(sql)
         return self.cursor.fetchone()[0]
 
+    @try_db_sql
     def update_product_count(self, product_id, product_count):
-        sql = "update product set count={} where product_id={};".format(product_count, product_id)
+        sql = "UPDATE product SET count={} WHERE product_id={};".format(product_count, product_id)
         self.cursor.execute(sql)
         self.db.commit()
 
+    @try_db_sql
     def get_profit_by_product_id(self, product_id):
         sql = "SELECT source_price, price FROM product WHERE product_id={}".format(product_id)
         self.cursor.execute(sql)
         source_price, price = self.cursor.fetchone()
         return price - source_price
 
+    @try_db_sql
     def create_order_record(self, user_id, cashier_id, total_amount, total_profit):
         order_id = int(time.time())
         sql = "INSERT INTO order_record (user_id, profit, order_id, cashier_id, amount) VALUES ('{}', '{}', '{}', '{}', '{}');".format(
@@ -278,6 +296,7 @@ class MysqlDB:
         self.cursor.execute(select_sql)
         return self.cursor.fetchone()[0]
 
+    @try_db_sql
     def create_order_detail(self, order_id, product_id, count, price):
         sql = "INSERT INTO order_record_detail (order_id, product_id, count, price) VALUES ('{}', '{}', '{}', '{}');".format(
             order_id, product_id, count, price
