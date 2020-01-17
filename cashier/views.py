@@ -40,6 +40,7 @@ class CashierHandler:
         self.db = MysqlDB()
         self.cph = CashierPrintHandler()
         self.user_id = None  # 正在结算的用户ID
+        self.user_name = None  # 正在结算的用户名
         self.cashier_id = None  # 结算员ID
 
         self.create_tcp_server()
@@ -65,6 +66,7 @@ class CashierHandler:
         if len(request_data["shopping_cards"]):
             id, pn, name = self.db.get_user_msg_from_id(request_data["user_id"])
             self.user_id = id
+            self.user_name = name
             print("{}来结算了".format(name))
             self.success_send(connfd, "request successful.")
         else:
@@ -91,13 +93,6 @@ class CashierHandler:
         total_amount = self.sum_shopping_cards_amount(eval(request_data)["shopping_cards"])
         self.success_send(connfd, total_amount)
 
-    def product_not_enough(self):
-        """
-        库存不足通知提醒
-        :return:
-        """
-        pass
-
     def sum_shopping_cards_profit(self, shopping_cards):
         total_profit = Decimal("0.00")
         for item in shopping_cards:
@@ -115,6 +110,7 @@ class CashierHandler:
         order_id = self.db.create_order_record(self.user_id, self.cashier_id, total_amount, total_profit)
         for item in commit_record["success_list"]:
             self.db.create_order_detail(order_id, item["product_id"], item["count"], item["price"])
+        return order_id
 
     def get_export_ticket_paths(self):
         """
@@ -125,7 +121,7 @@ class CashierHandler:
         str_t1 = t.strftime("%Y-%m-%d_%H:%M:%S")
         return USER_TICKET_PATH + str_t1 + ".txt"
 
-    def export_ticket(self, pay_result, total_amount, user_pay_money, money_return):
+    def export_ticket(self, order_id, pay_result, total_amount, user_pay_money, money_return):
         """
         打印小票
         :return:
@@ -136,15 +132,15 @@ class CashierHandler:
         f = open(file_path, 'w+')
         f.write('                消费单' + '\n')
         f.write("-------------***********-------------" + "\n")
-        f.write("结算单号:                  %s" % id + "\n")
+        f.write("结算单号:                  %s" % order_id + "\n")
         for into in pay_result["success_list"]:
             f.write('商品名：{}，单价：{}元，个数：{}个\n'.format(into["name"], into["price"], into['count']))
         f.write(
             "应付:                    %s" % total_amount + '\n'
-                                                         "共付:                    %s" % user_pay_money + '\n'
+                                                         "实付:                    %s" % user_pay_money + '\n'
                                                                                                         "找零:                    %s" % money_return + "\n")
         f.write("结算员：{}（ID：{}）\n".format(name, id))
-        f.write("结算时间：{}".format(datetime.datetime.now()))
+        f.write("结算时间：{}".format(datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')))
         f.flush()
         f.close()
         return "小票已保存至:{}".format(file_path)
@@ -198,11 +194,16 @@ class CashierHandler:
         if money_return >= 0:
             # 结算、减库存
             pay_result = self.reduce_product_count(eval(shopping_cards_msg))
-            # 创建订单记录
-            self.commit_record(pay_result)
-            # 打印小票
-            ticket_msg = self.export_ticket(pay_result, total_amount, user_pay_money, money_return)
-            self.success_send(connfd, ticket_msg)
+            if len(pay_result.get("success_list", False)):
+                # 创建订单记录
+                order_id = self.commit_record(pay_result)
+                # 打印小票
+                ticket_msg = self.export_ticket(order_id, pay_result, total_amount, user_pay_money, money_return)
+                self.success_send(connfd, ticket_msg)
+                # print("{}结算完成".format(self.user_name))
+            else:
+                # 结算内容全部失败
+                self.fail_send(connfd, "订单库存被抢付，支付失败。")
         else:
             self.fail_send(connfd, "支付金额不足！")
 

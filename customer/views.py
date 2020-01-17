@@ -136,6 +136,13 @@ class ShoppingCart:
 
         return False, "您的购物车中没有该商品！"
 
+    def reset_product_list(self):
+        """
+        清空购物车
+        :return:
+        """
+        self.product_list = []
+
 
 class CustomerHandler:
     def __init__(self):
@@ -288,15 +295,16 @@ class CustomerHandler:
             status_code, msg = get_request(self.skfd.recv(1024).decode())
 
             if status_code == "200":
-                # TODO 范竹雲
-                self.total_price = Decimal(get_number_input("请输入付款金额：", is_float=True))
-                if self.total_price < Decimal(msg):
+                total_price = Decimal(get_number_input("请输入付款金额：", is_float=True))
+                if total_price < Decimal(msg):
                     print("金额不足")
                 else:
-                    request_data = "PAYING {}$${}".format(self.transform_shopping_cards(), self.total_price)
+                    request_data = "PAYING {}$${}".format(self.transform_shopping_cards(), total_price)
                     self.skfd.send(request_data.encode())
                     status_code, msg = get_request(self.skfd.recv(1024).decode())
                     print(msg)
+                    # 清空购物车
+                    self.shopping_cart.reset_product_list()
             else:
                 self.aph.paying_error(msg)
         else:

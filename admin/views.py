@@ -402,6 +402,8 @@ class AdminHandler:
         if educe == "是":
             file_path = self.get_lacked_product_file_path()
             f = open(file_path, 'w+')
+            f.write('                缺货库存单' + '\n')
+            f.write("-------------***********-------------" + "\n")
             for info in data:
                 f.write(self.aph.format_product(info) + '\n')
             f.flush()
